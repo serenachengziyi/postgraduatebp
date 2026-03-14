@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考研人“读研B/P值”性价比趣味评估</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #ffffff;
+            --bg: #050505;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg);
+            color: #f0f0f0;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #050505 100%);
+        }
+        .glow-title {
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            letter-spacing: -0.05em;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+        }
+        .option-btn {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateX(10px);
+        }
+        .progress-bar {
+            transition: width 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .result-tag {
+            background: linear-gradient(90deg, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- 首页 (适合截图) -->
+    <div id="start-screen" class="max-w-3xl w-full text-center py-20">
+        <div class="mb-12 animate-float inline-block">
+            <div class="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+                <span class="text-black text-4xl font-black italic">B/P</span>
+            </div>
+        </div>
+        <h1 class="text-6xl md:text-8xl font-black mb-6 glow-title italic uppercase">
+            读研性价比<br><span class="text-gray-500">趣味评估</span>
+        </h1>
+        <p class="text-gray-400 text-xl md:text-2xl mb-12 font-light tracking-wide">
+            Benefit / Pain：是去<span class="text-white font-bold underline">镀金</span>还是去<span class="text-white font-bold underline">渡劫</span>？
+        </p>
+        <button onclick="startQuiz()" class="group relative px-12 py-5 bg-white text-black font-black rounded-full text-xl hover:scale-110 transition-transform active:scale-95 shadow-xl">
+            开启你的生存报告
+            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-md rotate-12 group-hover:rotate-0 transition-transform">HOT</span>
+        </button>
+    </div>
+
+    <!-- 问卷主体 -->
+    <div id="quiz-container" class="max-w-2xl w-full hidden">
+        <div class="mb-10">
+            <div class="flex justify-between text-xs font-bold tracking-tighter text-gray-500 mb-3 uppercase">
+                <span id="progress-text">Question 01 / 15</span>
+                <span id="category-text">Loading...</span>
+            </div>
+            <div class="w-full h-1 bg-gray-900 rounded-full">
+                <div id="progress-bar" class="progress-bar h-full bg-white w-0 shadow-[0_0_10px_#fff]"></div>
+            </div>
+        </div>
+
+        <div id="question-card" class="glass-card p-10 min-h-[450px] flex flex-col justify-center transition-opacity duration-300">
+            <h2 id="question-title" class="text-3xl font-bold mb-10 leading-tight">加载中...</h2>
+            <div id="options-container" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- 结果页 -->
+    <div id="result-screen" class="max-w-5xl w-full hidden py-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- 左侧：雷达图 & 称号 -->
+            <div class="lg:col-span-5 glass-card p-8 lg:sticky lg:top-8">
+                <div class="text-center mb-10">
+                    <p class="text-xs font-black text-gray-500 uppercase tracking-[0.3em] mb-2">Analysis Report</p>
+                    <h2 id="result-type" class="text-4xl font-black text-white italic">---</h2>
+                    <div class="mt-4 inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10">
+                        <span class="text-gray-400 text-sm">B/P Ratio:</span>
+                        <span id="bp-score" class="text-white font-black text-lg">0.0</span>
+                    </div>
+                </div>
+                
+                <div class="aspect-square mb-8">
+                    <canvas id="radarChart"></canvas>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="p-5 bg-white/5 rounded-2xl border border-white/10">
+                        <h4 class="text-xs font-black text-gray-500 uppercase mb-2">深度分析 / Deep Analysis</h4>
+                        <p id="type-analysis" class="text-gray-300 text-sm leading-relaxed"></p>
+                    </div>
+                    <div class="p-5 bg-red-500/10 rounded-2xl border border-red-500/20">
+                        <h4 class="text-xs font-black text-red-500 uppercase mb-2">发疯瞬间 / Mental Breakdown</h4>
+                        <p id="crazy-moment" class="text-red-200/80 text-sm leading-relaxed italic font-serif"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：更多解读 -->
+            <div class="lg:col-span-7 space-y-6">
+                <div class="glass-card p-10">
+                    <h3 class="text-2xl font-black mb-6 flex items-center italic">
+                        <span class="w-1.5 h-8 bg-white mr-4"></span> 性价比解析
+                    </h3>
+                    <p id="cost-analysis" class="text-gray-300 text-lg leading-relaxed font-light"></p>
+                </div>
+
+                <div class="glass-card p-10 border-t-8 border-white">
+                    <h3 class="text-2xl font-black mb-6 flex items-center italic">
+                        <span class="w-1.5 h-8 bg-white mr-4"></span> 导师救赎指南
+                    </h3>
+                    <div id="final-advice" class="text-gray-300 space-y-4"></div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="location.reload()" class="flex-1 py-5 rounded-2xl border border-white/10 text-gray-500 font-bold hover:text-white hover:border-white transition-all">
+                        再测一次
+                    </button>
+                    <button onclick="showGuide()" class="flex-1 py-5 rounded-2xl bg-white text-black font-black hover:bg-gray-200 transition-all">
+                        读研 B/P 值强行提升（避坑）指南
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 避坑指南页 -->
+    <div id="guide-screen" class="max-w-4xl w-full hidden py-10">
+        <div class="glass-card p-10">
+            <h1 class="text-4xl font-black mb-10 flex items-center">
+                <span class="text-yellow-400 mr-4">🛠️</span> 读研 B/P 值强行提升（避坑）指南
+            </h1>
+            
+            <div class="space-y-10">
+                <section>
+                    <h2 class="text-2xl font-bold mb-6 border-b border-white/10 pb-2">一、 选型阶段：如何人为降低“Pain（痛苦）”？</h2>
+                    <p class="text-gray-300 mb-4">在考研择校时，很多人的 Pain 值爆表是因为选错了“物种”。</p>
+                    <div class="ml-6 space-y-4">
+                        <h3 class="text-xl font-semibold text-yellow-400">避坑雷区：</h3>
+                        <p class="text-gray-400">盲目追求名校的“天坑专业”。如果你只是为了学历，选一个名校的夕阳专业（如：xx哲学、xx材料），你的 B 值（收益）在就业市场可能极低，但毕业难度（P 值）却极高。</p>
+                        
+                        <h3 class="text-xl font-semibold text-green-400">续命技巧：</h3>
+                        <p class="text-gray-300"><strong class="text-white">横向选校：</strong> 优先选择<strong>“就业导向型”</strong>城市的普通双一流，而非“偏远地区”的 985。在上海读个普通双一流的实习机会，远多于在深山老林里刷论文。</p>
+                        <p class="text-gray-300"><strong class="text-white">纵向选专业：</strong></p>
+                        <p class="text-gray-400 ml-6">如果你不是铁了心搞学术，专硕（专业硕士）永远优于学硕。年限短、学费虽然贵点但实习时间多，B/P 值瞬间拉开档次。</p>
+                    </div>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-6 border-b border-white/10 pb-2">二、 择师阶段：如何避开“学术霸凌”？</h2>
+                    <p class="text-gray-300 mb-4">导师是决定你这三年是“镀金”还是“渡劫”的唯一变量。</p>
+                    <div class="ml-6 space-y-4">
+                        <h3 class="text-xl font-semibold text-yellow-400">导师画像避雷：</h3>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><strong class="text-white">“科研狂魔型”：</strong> 每天凌晨三点发邮件，要求你全年无休。除非你想发 Nature，否则慎入。（P 值爆表）</li>
+                            <li><strong class="text-white">“行政大拿型”：</strong> 导师官很大，常年见不到人。这种导师虽然有资源，但你可能沦为帮他报销发票、接送小孩的“高级家政”。</li>
+                        </ul>
+                        
+                        <h3 class="text-xl font-semibold text-green-400">高 B/P 值导师特征：</h3>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><strong class="text-white">“放羊但有底线型”：</strong> 不强迫你打卡，只要你论文达标。这种导师最适合想去实习、搞副业的同学。</li>
+                            <li><strong class="text-white">“青年才俊型”：</strong> 刚回国，正处在事业上升期，虽然累，但他会手把手带你出成果，产出收益（B 值）极快。</li>
+                        </ul>
+                    </div>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-6 border-b border-white/10 pb-2">三、 过程管理：如何强行拉高“Benefit（收益）”？</h2>
+                    <p class="text-gray-300 mb-4">入校后，如果发现环境不尽如人意，你可以通过以下策略进行“资产重组”：</p>
+                    <div class="ml-6 space-y-6">
+                        <div>
+                            <h3 class="text-xl font-semibold text-white">1. 开启“学术糊弄学” (Lower the P-value)</h3>
+                            <p class="text-gray-400">不要试图每一篇作业都写成神作。把 80% 的精力放在毕业论文这个“大 DDL”上，剩下的课程和任务，保持在“及格偏上”即可。节省出的精神带宽，用来维持你的身心健康。</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-xl font-semibold text-white">2. 建立“副业/实习”防御墙 (Increase the B-value)</h3>
+                            <p class="text-gray-400 mb-2">研究生最大的风险是<strong>“职业断层”</strong>。</p>
+                            <div class="space-y-2 ml-6 text-gray-400">
+                                <p><strong class="text-white">研一：</strong> 疯狂考证（如果你的行业看重证书）或自学实用技能（如 Python、剪辑、新媒体运营）。</p>
+                                <p><strong class="text-white">研二：</strong> 无论导师怎么阻拦，都要想办法出去实习至少 3 个月。在招聘者眼里，<strong>“名企实习 + 硕士学历”</strong>的 B 值是远远大于“只有硕士学历”的。</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-xl font-semibold text-white">3. 心理“赛博避难所”</h3>
+                            <p class="text-gray-400">加入一些“发疯文学”互助小组或同门匿名吐槽群。当你意识到导师的阴晴不定是行业常态，而非针对你个人时，你的痛苦感知（P 值）会由于“痛苦共同体”的存在而大幅稀释。</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            
+            <div class="mt-12 flex gap-4">
+                <button onclick="location.reload()" class="flex-1 py-5 rounded-2xl border border-white/10 text-gray-500 font-bold hover:text-white hover:border-white transition-all">
+                    返回首页
+                </button>
+                <button onclick="backToResult()" class="flex-1 py-5 rounded-2xl bg-white text-black font-black hover:bg-gray-200 transition-all">
+                    返回结果页
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ... (questions 数组保持不变)
+        const questions = [
+            // Benefit (1-5)
+            {
+                q: "关于学历溢价，你的心理预期是？",
+                cat: "Benefit",
+                options: [
+                    { text: "翻天覆地，直接空降大厂管理层", b: 30, p: 0, r: [90, 80, 50, 60, 70] },
+                    { text: "稳扎稳打，起薪比本科多两三千就行", b: 20, p: 0, r: [70, 60, 60, 50, 60] },
+                    { text: "混个门槛，只求考公考编不被简历初筛过滤", b: 10, p: 0, r: [50, 40, 70, 40, 50] },
+                    { text: "只是想延迟就业，逃避是我的本能", b: 0, p: 0, r: [20, 20, 80, 20, 30] }
+                ]
+            },
+            {
+                q: "假如导师让你去跑腿办杂事，你的心态是？",
+                cat: "Benefit",
+                options: [
+                    { text: "只要能学到资源和人脉，我就是导师最贴心的\"大总管\"", b: 30, p: 0, r: [60, 70, 40, 80, 70] },
+                    { text: "偶尔为之可以接受，权当社交练习", b: 20, p: 0, r: [50, 50, 50, 60, 60] },
+                    { text: "敢怒不敢言，内心已经把他拉黑一万次", b: 10, p: 5, r: [40, 30, 60, 40, 40] },
+                    { text: "宁死不屈，我是来搞学术的，不是来当助力的", b: 0, p: 10, r: [20, 20, 70, 30, 30] }
+                ]
+            },
+            {
+                q: "你对\"导师资源\"的执念有多深？",
+                cat: "Benefit",
+                options: [
+                    { text: "渴望大佬带我飞，进入核心学术圈/行业圈", b: 30, p: 0, r: [80, 90, 40, 80, 80] },
+                    { text: "希望导师是个好人，别卡我毕业就行", b: 20, p: 0, r: [60, 60, 60, 60, 60] },
+                    { text: "只要学校名头响，导师是谁我随缘", b: 10, p: 0, r: [70, 40, 70, 40, 50] },
+                    { text: "导师是谁？我以为我是自学成才", b: 0, p: 0, r: [30, 20, 80, 20, 30] }
+                ]
+            },
+            {
+                q: "你的专业在未来5-10年的\"保质期\"如何？",
+                cat: "Benefit",
+                options: [
+                    { text: "越老越吃香，研究生的深度研究是刚需", b: 30, p: 0, r: [90, 80, 40, 90, 80] },
+                    { text: "比较稳定，学历能提供长期的避风港", b: 20, p: 0, r: [70, 60, 60, 70, 70] },
+                    { text: "更新极快，读研三年出来可能技术已经迭代两轮了", b: 10, p: 5, r: [50, 40, 70, 50, 40] },
+                    { text: "夕阳产业，读研只是在泰坦尼克号上买张头等舱门票", b: 0, p: 10, r: [30, 20, 90, 30, 20] }
+                ]
+            },
+            {
+                q: "目标院校对你的吸引力在于？",
+                cat: "Benefit",
+                options: [
+                    { text: "顶级平台，校友网络遍布全球", b: 30, p: 0, r: [90, 90, 40, 80, 90] },
+                    { text: "城市不错，我想去那里体验人生", b: 20, p: 0, r: [60, 70, 60, 50, 60] },
+                    { text: "离家近，食堂好，宿舍有空调", b: 10, p: 0, r: [40, 40, 80, 40, 40] },
+                    { text: "没啥吸引力，只是因为它好考", b: 0, p: 0, r: [20, 20, 90, 20, 20] }
+                ]
+            },
+            {
+                q: "想到\"文献阅读\"和\"学术论文\"，你的生理反应是？",
+                cat: "Pain",
+                options: [
+                    { text: "略微头疼，但能克服", b: 5, p: 0, r: [50, 40, 40, 80, 70] },
+                    { text: "视力模糊，开始产生PTSD", b: 0, p: 10, r: [40, 30, 60, 60, 50] },
+                    { text: "看到英文文献就想原地飞升", b: 0, p: 20, r: [30, 20, 80, 40, 30] },
+                    { text: "别说了，我现在就想把电脑砸了", b: 0, p: 30, r: [10, 10, 95, 20, 10] }
+                ]
+            },
+            {
+                q: "你的抗压能力（心理防线）目前处于？",
+                cat: "Pain",
+                options: [
+                    { text: "钢铁长城，导师骂我当唱歌", b: 5, p: 0, r: [40, 40, 20, 70, 90] },
+                    { text: "塑料防线，间歇性踌躇满志，持续性想退课", b: 0, p: 10, r: [40, 40, 50, 50, 60] },
+                    { text: "脆皮大学生，别人说话大声点我都要碎了", b: 0, p: 20, r: [30, 30, 80, 30, 30] },
+                    { text: "已成灰烬，全靠表情包吊着一口气", b: 0, p: 30, r: [10, 10, 95, 10, 10] }
+                ]
+            },
+            {
+                q: "看着本科同学发工资旅游结婚，你的心态是？",
+                cat: "Pain",
+                options: [
+                    { text: "关我屁事，老子在追求真理", b: 10, p: 0, r: [40, 30, 10, 90, 80] },
+                    { text: "略有羡慕，但觉得这是成长的必经之路", b: 5, p: 10, r: [40, 40, 40, 70, 70] },
+                    { text: "极其焦虑，感觉自己被同龄人甩开了一大截", b: 0, p: 25, r: [30, 30, 80, 40, 40] },
+                    { text: "破防边缘，每天都在后悔当初为什么不找工作", b: 0, p: 35, r: [10, 10, 95, 20, 20] }
+                ]
+            },
+            {
+                q: "你目前的社交/恋爱状态是？",
+                cat: "Pain",
+                options: [
+                    { text: "单身贵族/感情稳定，读研不会影响大局", b: 0, p: 0, r: [40, 40, 20, 60, 70] },
+                    { text: "正在异地，感觉读研后可能会\"学海无涯，回头没TA\"", b: 0, p: 15, r: [40, 40, 60, 50, 50] },
+                    { text: "家里催婚催得紧，读研简直是我的催命符", b: 0, p: 25, r: [30, 30, 80, 40, 30] },
+                    { text: "社交恐惧，想到要进实验室社交就想重开", b: 0, p: 30, r: [20, 20, 90, 30, 20] }
+                ]
+            },
+            {
+                q: "你对\"不确定性\"的恐惧程度？",
+                cat: "Pain",
+                options: [
+                    { text: "喜欢挑战，毕业找不到工作就去摆摊", b: 10, p: 0, r: [40, 30, 20, 60, 90] },
+                    { text: "比较担忧，但相信船到桥头自然直", b: 5, p: 10, r: [40, 40, 50, 50, 70] },
+                    { text: "每天都在焦虑三年后学历是否会贬值", b: 0, p: 20, r: [30, 30, 70, 40, 40] },
+                    { text: "严重精神内耗，还没考上就开始想毕业失业怎么办", b: 0, p: 30, r: [10, 10, 90, 20, 20] }
+                ]
+            },
+            {
+                q: "面对\"多巴胺\"来源，你目前的心理机制是？",
+                cat: "Z-Gen",
+                options: [
+                    { text: "成就感驱动：攻克一个复杂逻辑或实验结果能爽很久", b: 10, p: 0, r: [30, 20, 10, 90, 80] },
+                    { text: "任务型解脱：搞定ddl的那一刻，感觉活过来了", b: 5, p: 10, r: [40, 40, 40, 70, 60] },
+                    { text: "补偿性消费：学习五分钟，必须刷两小时短视频奖励自己", b: 0, p: 20, r: [30, 30, 70, 40, 40] },
+                    { text: "虚无主义：做什么都提不起劲，感觉人生就是一场巨大的草台班子", b: 0, p: 30, r: [10, 10, 95, 20, 20] }
+                ]
+            },
+            {
+                q: "如果遇到\"延毕\"风险，你的精神状态会？",
+                cat: "Z-Gen",
+                options: [
+                    { text: "逻辑分析：评估延毕收益，若为了磨大论文可以接受", b: 10, p: 0, r: [30, 30, 10, 80, 90] },
+                    { text: "焦虑内耗：感觉人生履历有了污点，开始整夜失眠", b: 0, p: 15, r: [40, 40, 60, 50, 60] },
+                    { text: "彻底发疯：想去导师办公室门口表演阴暗爬行", b: 0, p: 25, r: [30, 20, 85, 30, 30] },
+                    { text: "物理断联：直接人间蒸发，手机关机，谁也别想找到我", b: 0, p: 35, r: [10, 10, 95, 10, 10] }
+                ]
+            },
+            {
+                q: "你对\"学术裁缝\"或\"学术垃圾\"的容忍度是？",
+                cat: "Z-Gen",
+                options: [
+                    { text: "坚守底线：无法接受平庸，必须做出有价值的东西", b: 10, p: 5, r: [30, 20, 30, 90, 70] },
+                    { text: "灵活就业：只要能过查重，垃圾不垃圾的无所谓", b: 5, p: 10, r: [40, 40, 40, 60, 60] },
+                    { text: "痛苦挣扎：一边看不起自己的论文，一边流泪缝合", b: 0, p: 20, r: [30, 30, 70, 40, 40] },
+                    { text: "精神毁灭：深度怀疑读书的意义，感觉在浪费生命和纸张", b: 0, p: 30, r: [10, 10, 95, 20, 10] }
+                ]
+            },
+            {
+                q: "面对\"导师push\"或\"同门内卷\"，你的防御技能是？",
+                cat: "Z-Gen",
+                options: [
+                    { text: "沟通达人：能有效管理导师预期，划定工作边界", b: 10, p: 0, r: [30, 30, 20, 80, 90] },
+                    { text: "笨鸟先飞：卷不过就加入，靠牺牲睡眠时间硬扛", b: 5, p: 15, r: [40, 40, 60, 60, 60] },
+                    { text: "精神隔离：表面点头称是，内心在背大悲咒", b: 0, p: 25, r: [30, 30, 80, 40, 50] },
+                    { text: "心理崩溃：每一次对比都会产生强烈的自卑感和辞职冲动", b: 0, p: 35, r: [10, 10, 95, 20, 10] }
+                ]
+            },
+            {
+                q: "读研对你而言，更像以下哪种人生隐喻？",
+                cat: "Z-Gen",
+                options: [
+                    { text: "升级礼包：虽然副本难打，但掉落的装备很值钱", b: 20, p: 5, r: [60, 60, 20, 70, 80] },
+                    { text: "延寿补丁：暂时不用面对就业压力，先续命三年再说", b: 10, p: 15, r: [40, 50, 50, 40, 60] },
+                    { text: "昂贵围城：外面的人想进去，里面的人想跳城墙", b: 5, p: 25, r: [30, 30, 80, 30, 40] },
+                    { text: "慢性放血：在最好的年纪，用最贵的精力和最少的收入换一个问号", b: 0, p: 35, r: [10, 10, 95, 10, 10] }
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let totalB = 0;
+        let totalP = 0;
+        let radarData = [0, 0, 0, 0, 0];
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('progress-text').innerText = `Question ${String(currentQuestion + 1).padStart(2, '0')} / 15`;
+            document.getElementById('category-text').innerText = q.cat;
+            document.getElementById('progress-bar').style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            document.getElementById('question-title').innerText = q.q;
+
+            q.options.forEach(opt => {
+                const b = document.createElement('button');
+                b.className = "option-btn w-full p-6 text-left rounded-2xl border border-white/5 text-gray-400 font-medium hover:text-white";
+                b.innerText = opt.text;
+                b.onclick = () => {
+                    totalB += opt.b; totalP += opt.p;
+                    opt.r.forEach((v, i) => radarData[i] += v);
+                    if (++currentQuestion < questions.length) showQuestion();
+                    else showResult();
+                };
+                container.appendChild(b);
+            });
+        }
+
+        function showResult() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const ratio = (totalB / (totalP || 1)).toFixed(2);
+            document.getElementById('bp-score').innerText = ratio;
+            
+            const finalRadar = radarData.map(v => v / questions.length);
+            let type, analysis, moment, cost, advice;
+
+            if (ratio > 2.0) {
+                type = "战略级掘金者";
+                analysis = "你是考研群体中的“1%”。你对专业有着近乎宗教般的虔诚，或者有着极度功利但高效的规划。你不仅能忍受孤独，甚至能从枯燥的文献中提取多巴胺。";
+                moment = "“这篇不行，老子反手改改投个分低点的，绝不浪费哪怕一个标点符号。”";
+                cost = "你是一个典型的“高带宽”选手。你并不觉得读书苦，或者说你认为这种苦是通往成功的合理标价。你的性价比极高，因为你能够将研究生的每一天都转化为未来的议价筹码。";
+                advice = "<p>• 在研一就锁定直博、出国或名企内推机会。</p><p>• 保持效率，研究生阶段你过得像职业经理人。</p>";
+            } else if (ratio >= 1.5) {
+                type = "清醒的职场预备役";
+                analysis = "典型的“人间清醒”。你清楚读研是为了“镀金”，所以你绝不会在学术死胡同里撞墙。你会在实验室里摸鱼改简历，在组会上表演勤奋，在校外疯狂实习。";
+                moment = "“如果我现在辞掉导师，简历上这三年的空窗期该怎么编？”";
+                cost = "你非常网感地理解了“读研即工作”的本质。导师的控制欲是你最大的变量。如果你能平衡好“学术糊弄”与“校外实习”，那么你的B/P值将达到巅峰。";
+                advice = "<p>• 只要论文达标、毕业无忧，精力全部投入到市场价值积累上。</p><p>• 学会向上管理，别让导师成为你的职业绊脚石。</p>";
+            } else if (ratio >= 1.0) {
+                type = "间歇性发疯中间派";
+                analysis = "这是最庞大的“脆皮大学生”群体。你没有大志向，但又怕被淘汰。你一边在朋友圈转发发疯文学，一边兢兢业业地做实验。你很努力，但这种努力带有一种强烈的“被迫感”。";
+                moment = "“我这三年图个啥？隔壁二狗都买车了，我还在为查重率流泪。”";
+                cost = "性价比中等。读研会给你个体面的学历，但可能无法给你带来预期的幸福感。你常常在“既要又要”中内耗，导致痛苦值在高位震荡。";
+                advice = "<p>• 允许自己间歇性摆烂，找个同门组成“互助苟活小组”。</p><p>• 接纳自己的普通，降低对“大成果”的执念。</p>";
+            } else if (ratio >= 0.5) {
+                type = "脆皮逃避型/学历依赖";
+                analysis = "你被“唯学历论”深度绑架。你其实极度厌恶书本，但你觉得不读研人生就完了。你考研是为了“再当三年孩子”，逃避社会的丛林法则。";
+                moment = "“发现研究生毕业也要被卷，甚至要进更大的绞肉机，我TM...”";
+                cost = "性价比偏低。你对痛苦的感知极度敏锐。当你发现毕业起薪可能还不如三年前就业积累的水平时，你的精神支柱会面临坍塌风险。";
+                advice = "<p>• 立即寻找第二曲线，别把所有筹码都压在学历上。</p><p>• 减少无效学习，多去尝试真实的职场压力。</p>";
+            } else {
+                type = "学术难民/精神黑洞";
+                analysis = "预警！你目前的考研动力完全来自外部。读研对你而言无异于一场为期三年的心理酷刑。你正在透支你的身心健康来换取一个可能已经贬值的证书。";
+                moment = "“我想烧了这堆文献，然后随便坐上一辆公交车到终点站，永远别回来。”";
+                cost = "性价比为负。你可能会在论文盲审或实验失败时彻底崩溃。你对科研不仅是没兴趣，而是生理性的排斥。";
+                advice = "<p>• 勇敢止损，原地解散。人生没有必读的书，只有活好的自己。</p><p>• 停止发疯备考，去尝试低压力的工作，这不丢人。</p>";
+            }
+
+            document.getElementById('result-type').innerText = type;
+            document.getElementById('type-analysis').innerText = analysis;
+            document.getElementById('crazy-moment').innerText = moment;
+            document.getElementById('cost-analysis').innerText = cost;
+            document.getElementById('final-advice').innerHTML = advice;
+
+            renderChart(finalRadar);
+        }
+
+        function renderChart(data) {
+            new Chart(document.getElementById('radarChart'), {
+                type: 'radar',
+                data: {
+                    labels: ['变现潜力', '精神带宽', '机会成本', '学术适配', '反脆弱性'],
+                    datasets: [{
+                        data: data,
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        borderColor: '#fff',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff'
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: '#888', font: { size: 12, weight: 'bold' } },
+                            ticks: { display: false },
+                            suggestedMin: 0, suggestedMax: 100
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function showGuide() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('guide-screen').classList.remove('hidden');
+        }
+
+        function backToResult() {
+            document.getElementById('guide-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
