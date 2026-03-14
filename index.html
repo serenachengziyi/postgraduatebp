@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>考研人“读研B/P值”性价比趣味评估</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,6 +18,7 @@
             color: #f0f0f0;
             overflow-x: hidden;
             background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #050505 100%);
+            touch-action: manipulation;
         }
         .glow-title {
             text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
@@ -38,6 +39,9 @@
             border-color: rgba(255, 255, 255, 0.3);
             transform: translateX(10px);
         }
+        .option-btn:active {
+            transform: translateX(10px) scale(0.98);
+        }
         .progress-bar {
             transition: width 0.6s cubic-bezier(0.65, 0, 0.35, 1);
         }
@@ -53,32 +57,39 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        @media (max-width: 640px) {
+            .chart-container {
+                position: relative;
+                height: 300px;
+                width: 100%;
+            }
+        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
 
     <!-- 首页 (适合截图) -->
-    <div id="start-screen" class="max-w-3xl w-full text-center py-20">
-        <div class="mb-12 animate-float inline-block">
-            <div class="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center shadow-[0_0_50px_rgba(255,255,255,0.2)]">
-                <span class="text-black text-4xl font-black italic">B/P</span>
+    <div id="start-screen" class="w-full text-center py-12 md:py-20">
+        <div class="mb-8 md:mb-12 animate-float inline-block">
+            <div class="w-20 md:w-24 h-20 md:h-24 bg-white rounded-full mx-auto flex items-center justify-center shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+                <span class="text-black text-3xl md:text-4xl font-black italic">B/P</span>
             </div>
         </div>
-        <h1 class="text-6xl md:text-8xl font-black mb-6 glow-title italic uppercase">
+        <h1 class="text-4xl md:text-6xl lg:text-8xl font-black mb-4 md:mb-6 glow-title italic uppercase">
             读研性价比<br><span class="text-gray-500">趣味评估</span>
         </h1>
-        <p class="text-gray-400 text-xl md:text-2xl mb-12 font-light tracking-wide">
+        <p class="text-gray-400 text-base md:text-xl lg:text-2xl mb-8 md:mb-12 font-light tracking-wide">
             Benefit / Pain：是去<span class="text-white font-bold underline">镀金</span>还是去<span class="text-white font-bold underline">渡劫</span>？
         </p>
-        <button onclick="startQuiz()" class="group relative px-12 py-5 bg-white text-black font-black rounded-full text-xl hover:scale-110 transition-transform active:scale-95 shadow-xl">
+        <button onclick="startQuiz()" class="group relative px-8 md:px-12 py-4 md:py-5 bg-white text-black font-black rounded-full text-lg md:text-xl hover:scale-110 transition-transform active:scale-95 shadow-xl">
             开启你的生存报告
             <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-md rotate-12 group-hover:rotate-0 transition-transform">HOT</span>
         </button>
     </div>
 
     <!-- 问卷主体 -->
-    <div id="quiz-container" class="max-w-2xl w-full hidden">
-        <div class="mb-10">
+    <div id="quiz-container" class="w-full hidden">
+        <div class="mb-6 md:mb-10">
             <div class="flex justify-between text-xs font-bold tracking-tighter text-gray-500 mb-3 uppercase">
                 <span id="progress-text">Question 01 / 15</span>
                 <span id="category-text">Loading...</span>
@@ -88,64 +99,64 @@
             </div>
         </div>
 
-        <div id="question-card" class="glass-card p-10 min-h-[450px] flex flex-col justify-center transition-opacity duration-300">
-            <h2 id="question-title" class="text-3xl font-bold mb-10 leading-tight">加载中...</h2>
-            <div id="options-container" class="space-y-4"></div>
+        <div id="question-card" class="glass-card p-6 md:p-10 min-h-[400px] md:min-h-[450px] flex flex-col justify-center transition-opacity duration-300">
+            <h2 id="question-title" class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 leading-tight">加载中...</h2>
+            <div id="options-container" class="space-y-3 md:space-y-4"></div>
         </div>
     </div>
 
     <!-- 结果页 -->
-    <div id="result-screen" class="max-w-5xl w-full hidden py-10">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div id="result-screen" class="w-full hidden py-6 md:py-10">
+        <div class="space-y-6 md:space-y-8">
             
-            <!-- 左侧：雷达图 & 称号 -->
-            <div class="lg:col-span-5 glass-card p-8 lg:sticky lg:top-8">
-                <div class="text-center mb-10">
+            <!-- 雷达图 & 称号 -->
+            <div class="glass-card p-6 md:p-8">
+                <div class="text-center mb-6 md:mb-10">
                     <p class="text-xs font-black text-gray-500 uppercase tracking-[0.3em] mb-2">Analysis Report</p>
-                    <h2 id="result-type" class="text-4xl font-black text-white italic">---</h2>
+                    <h2 id="result-type" class="text-3xl md:text-4xl font-black text-white italic">---</h2>
                     <div class="mt-4 inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10">
                         <span class="text-gray-400 text-sm">B/P Ratio:</span>
                         <span id="bp-score" class="text-white font-black text-lg">0.0</span>
                     </div>
                 </div>
                 
-                <div class="aspect-square mb-8">
+                <div class="chart-container mb-6 md:mb-8">
                     <canvas id="radarChart"></canvas>
                 </div>
 
                 <div class="space-y-4">
-                    <div class="p-5 bg-white/5 rounded-2xl border border-white/10">
+                    <div class="p-4 md:p-5 bg-white/5 rounded-2xl border border-white/10">
                         <h4 class="text-xs font-black text-gray-500 uppercase mb-2">深度分析 / Deep Analysis</h4>
                         <p id="type-analysis" class="text-gray-300 text-sm leading-relaxed"></p>
                     </div>
-                    <div class="p-5 bg-red-500/10 rounded-2xl border border-red-500/20">
+                    <div class="p-4 md:p-5 bg-red-500/10 rounded-2xl border border-red-500/20">
                         <h4 class="text-xs font-black text-red-500 uppercase mb-2">发疯瞬间 / Mental Breakdown</h4>
                         <p id="crazy-moment" class="text-red-200/80 text-sm leading-relaxed italic font-serif"></p>
                     </div>
                 </div>
             </div>
 
-            <!-- 右侧：更多解读 -->
-            <div class="lg:col-span-7 space-y-6">
-                <div class="glass-card p-10">
-                    <h3 class="text-2xl font-black mb-6 flex items-center italic">
-                        <span class="w-1.5 h-8 bg-white mr-4"></span> 性价比解析
+            <!-- 更多解读 -->
+            <div class="space-y-6">
+                <div class="glass-card p-6 md:p-10">
+                    <h3 class="text-xl md:text-2xl font-black mb-4 md:mb-6 flex items-center italic">
+                        <span class="w-1.5 h-6 md:h-8 bg-white mr-3 md:mr-4"></span> 性价比解析
                     </h3>
-                    <p id="cost-analysis" class="text-gray-300 text-lg leading-relaxed font-light"></p>
+                    <p id="cost-analysis" class="text-gray-300 text-base md:text-lg leading-relaxed font-light"></p>
                 </div>
 
-                <div class="glass-card p-10 border-t-8 border-white">
-                    <h3 class="text-2xl font-black mb-6 flex items-center italic">
-                        <span class="w-1.5 h-8 bg-white mr-4"></span> 导师救赎指南
+                <div class="glass-card p-6 md:p-10 border-t-8 border-white">
+                    <h3 class="text-xl md:text-2xl font-black mb-4 md:mb-6 flex items-center italic">
+                        <span class="w-1.5 h-6 md:h-8 bg-white mr-3 md:mr-4"></span> 导师救赎指南
                     </h3>
-                    <div id="final-advice" class="text-gray-300 space-y-4"></div>
+                    <div id="final-advice" class="text-gray-300 space-y-3 md:space-y-4"></div>
                 </div>
 
-                <div class="flex gap-4">
-                    <button onclick="location.reload()" class="flex-1 py-5 rounded-2xl border border-white/10 text-gray-500 font-bold hover:text-white hover:border-white transition-all">
+                <div class="flex flex-col sm:flex-row gap-3 md:gap-4">
+                    <button onclick="location.reload()" class="flex-1 py-4 md:py-5 rounded-2xl border border-white/10 text-gray-500 font-bold hover:text-white hover:border-white transition-all">
                         再测一次
                     </button>
-                    <button onclick="showGuide()" class="flex-1 py-5 rounded-2xl bg-white text-black font-black hover:bg-gray-200 transition-all">
+                    <button onclick="showGuide()" class="flex-1 py-4 md:py-5 rounded-2xl bg-white text-black font-black hover:bg-gray-200 transition-all">
                         读研 B/P 值强行提升（避坑）指南
                     </button>
                 </div>
@@ -154,38 +165,38 @@
     </div>
 
     <!-- 避坑指南页 -->
-    <div id="guide-screen" class="max-w-4xl w-full hidden py-10">
-        <div class="glass-card p-10">
-            <h1 class="text-4xl font-black mb-10 flex items-center">
-                <span class="text-yellow-400 mr-4">🛠️</span> 读研 B/P 值强行提升（避坑）指南
+    <div id="guide-screen" class="w-full hidden py-6 md:py-10">
+        <div class="glass-card p-6 md:p-10">
+            <h1 class="text-2xl md:text-4xl font-black mb-6 md:mb-10 flex items-center">
+                <span class="text-yellow-400 mr-3 md:mr-4">🛠️</span> 读研 B/P 值强行提升（避坑）指南
             </h1>
             
-            <div class="space-y-10">
+            <div class="space-y-8 md:space-y-10">
                 <section>
-                    <h2 class="text-2xl font-bold mb-6 border-b border-white/10 pb-2">一、 选型阶段：如何人为降低“Pain（痛苦）”？</h2>
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 border-b border-white/10 pb-2">一、 选型阶段：如何人为降低“Pain（痛苦）”？</h2>
                     <p class="text-gray-300 mb-4">在考研择校时，很多人的 Pain 值爆表是因为选错了“物种”。</p>
-                    <div class="ml-6 space-y-4">
-                        <h3 class="text-xl font-semibold text-yellow-400">避坑雷区：</h3>
+                    <div class="ml-4 md:ml-6 space-y-4">
+                        <h3 class="text-lg md:text-xl font-semibold text-yellow-400">避坑雷区：</h3>
                         <p class="text-gray-400">盲目追求名校的“天坑专业”。如果你只是为了学历，选一个名校的夕阳专业（如：xx哲学、xx材料），你的 B 值（收益）在就业市场可能极低，但毕业难度（P 值）却极高。</p>
                         
-                        <h3 class="text-xl font-semibold text-green-400">续命技巧：</h3>
+                        <h3 class="text-lg md:text-xl font-semibold text-green-400">续命技巧：</h3>
                         <p class="text-gray-300"><strong class="text-white">横向选校：</strong> 优先选择<strong>“就业导向型”</strong>城市的普通双一流，而非“偏远地区”的 985。在上海读个普通双一流的实习机会，远多于在深山老林里刷论文。</p>
                         <p class="text-gray-300"><strong class="text-white">纵向选专业：</strong></p>
-                        <p class="text-gray-400 ml-6">如果你不是铁了心搞学术，专硕（专业硕士）永远优于学硕。年限短、学费虽然贵点但实习时间多，B/P 值瞬间拉开档次。</p>
+                        <p class="text-gray-400 ml-4 md:ml-6">如果你不是铁了心搞学术，专硕（专业硕士）永远优于学硕。年限短、学费虽然贵点但实习时间多，B/P 值瞬间拉开档次。</p>
                     </div>
                 </section>
                 
                 <section>
-                    <h2 class="text-2xl font-bold mb-6 border-b border-white/10 pb-2">二、 择师阶段：如何避开“学术霸凌”？</h2>
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 border-b border-white/10 pb-2">二、 择师阶段：如何避开“学术霸凌”？</h2>
                     <p class="text-gray-300 mb-4">导师是决定你这三年是“镀金”还是“渡劫”的唯一变量。</p>
-                    <div class="ml-6 space-y-4">
-                        <h3 class="text-xl font-semibold text-yellow-400">导师画像避雷：</h3>
+                    <div class="ml-4 md:ml-6 space-y-4">
+                        <h3 class="text-lg md:text-xl font-semibold text-yellow-400">导师画像避雷：</h3>
                         <ul class="space-y-2 text-gray-400">
                             <li><strong class="text-white">“科研狂魔型”：</strong> 每天凌晨三点发邮件，要求你全年无休。除非你想发 Nature，否则慎入。（P 值爆表）</li>
                             <li><strong class="text-white">“行政大拿型”：</strong> 导师官很大，常年见不到人。这种导师虽然有资源，但你可能沦为帮他报销发票、接送小孩的“高级家政”。</li>
                         </ul>
                         
-                        <h3 class="text-xl font-semibold text-green-400">高 B/P 值导师特征：</h3>
+                        <h3 class="text-lg md:text-xl font-semibold text-green-400">高 B/P 值导师特征：</h3>
                         <ul class="space-y-2 text-gray-400">
                             <li><strong class="text-white">“放羊但有底线型”：</strong> 不强迫你打卡，只要你论文达标。这种导师最适合想去实习、搞副业的同学。</li>
                             <li><strong class="text-white">“青年才俊型”：</strong> 刚回国，正处在事业上升期，虽然累，但他会手把手带你出成果，产出收益（B 值）极快。</li>
@@ -194,36 +205,36 @@
                 </section>
                 
                 <section>
-                    <h2 class="text-2xl font-bold mb-6 border-b border-white/10 pb-2">三、 过程管理：如何强行拉高“Benefit（收益）”？</h2>
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 border-b border-white/10 pb-2">三、 过程管理：如何强行拉高“Benefit（收益）”？</h2>
                     <p class="text-gray-300 mb-4">入校后，如果发现环境不尽如人意，你可以通过以下策略进行“资产重组”：</p>
-                    <div class="ml-6 space-y-6">
+                    <div class="ml-4 md:ml-6 space-y-6">
                         <div>
-                            <h3 class="text-xl font-semibold text-white">1. 开启“学术糊弄学” (Lower the P-value)</h3>
+                            <h3 class="text-lg md:text-xl font-semibold text-white">1. 开启“学术糊弄学” (Lower the P-value)</h3>
                             <p class="text-gray-400">不要试图每一篇作业都写成神作。把 80% 的精力放在毕业论文这个“大 DDL”上，剩下的课程和任务，保持在“及格偏上”即可。节省出的精神带宽，用来维持你的身心健康。</p>
                         </div>
                         
                         <div>
-                            <h3 class="text-xl font-semibold text-white">2. 建立“副业/实习”防御墙 (Increase the B-value)</h3>
+                            <h3 class="text-lg md:text-xl font-semibold text-white">2. 建立“副业/实习”防御墙 (Increase the B-value)</h3>
                             <p class="text-gray-400 mb-2">研究生最大的风险是<strong>“职业断层”</strong>。</p>
-                            <div class="space-y-2 ml-6 text-gray-400">
+                            <div class="space-y-2 ml-4 md:ml-6 text-gray-400">
                                 <p><strong class="text-white">研一：</strong> 疯狂考证（如果你的行业看重证书）或自学实用技能（如 Python、剪辑、新媒体运营）。</p>
                                 <p><strong class="text-white">研二：</strong> 无论导师怎么阻拦，都要想办法出去实习至少 3 个月。在招聘者眼里，<strong>“名企实习 + 硕士学历”</strong>的 B 值是远远大于“只有硕士学历”的。</p>
                             </div>
                         </div>
                         
                         <div>
-                            <h3 class="text-xl font-semibold text-white">3. 心理“赛博避难所”</h3>
+                            <h3 class="text-lg md:text-xl font-semibold text-white">3. 心理“赛博避难所”</h3>
                             <p class="text-gray-400">加入一些“发疯文学”互助小组或同门匿名吐槽群。当你意识到导师的阴晴不定是行业常态，而非针对你个人时，你的痛苦感知（P 值）会由于“痛苦共同体”的存在而大幅稀释。</p>
                         </div>
                     </div>
                 </section>
             </div>
             
-            <div class="mt-12 flex gap-4">
-                <button onclick="location.reload()" class="flex-1 py-5 rounded-2xl border border-white/10 text-gray-500 font-bold hover:text-white hover:border-white transition-all">
+            <div class="mt-8 md:mt-12 flex flex-col sm:flex-row gap-3 md:gap-4">
+                <button onclick="location.reload()" class="flex-1 py-4 md:py-5 rounded-2xl border border-white/10 text-gray-500 font-bold hover:text-white hover:border-white transition-all">
                     返回首页
                 </button>
-                <button onclick="backToResult()" class="flex-1 py-5 rounded-2xl bg-white text-black font-black hover:bg-gray-200 transition-all">
+                <button onclick="backToResult()" class="flex-1 py-4 md:py-5 rounded-2xl bg-white text-black font-black hover:bg-gray-200 transition-all">
                     返回结果页
                 </button>
             </div>
@@ -409,7 +420,7 @@
 
             q.options.forEach(opt => {
                 const b = document.createElement('button');
-                b.className = "option-btn w-full p-6 text-left rounded-2xl border border-white/5 text-gray-400 font-medium hover:text-white";
+                b.className = "option-btn w-full p-5 md:p-6 text-left rounded-2xl border border-white/5 text-gray-400 font-medium hover:text-white";
                 b.innerText = opt.text;
                 b.onclick = () => {
                     totalB += opt.b; totalP += opt.p;
@@ -473,7 +484,15 @@
         }
 
         function renderChart(data) {
-            new Chart(document.getElementById('radarChart'), {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            // 销毁旧图表（如果存在）
+            if (window.radarChartInstance) {
+                window.radarChartInstance.destroy();
+            }
+            
+            // 创建新图表
+            window.radarChartInstance = new Chart(ctx, {
                 type: 'radar',
                 data: {
                     labels: ['变现潜力', '精神带宽', '机会成本', '学术适配', '反脆弱性'],
@@ -487,16 +506,27 @@
                     }]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         r: {
                             angleLines: { color: 'rgba(255,255,255,0.1)' },
                             grid: { color: 'rgba(255,255,255,0.1)' },
-                            pointLabels: { color: '#888', font: { size: 12, weight: 'bold' } },
+                            pointLabels: {
+                                color: '#888',
+                                font: { 
+                                    size: window.innerWidth < 640 ? 10 : 12, 
+                                    weight: 'bold' 
+                                }
+                            },
                             ticks: { display: false },
-                            suggestedMin: 0, suggestedMax: 100
+                            suggestedMin: 0, 
+                            suggestedMax: 100
                         }
                     },
-                    plugins: { legend: { display: false } }
+                    plugins: { 
+                        legend: { display: false }
+                    }
                 }
             });
         }
@@ -510,6 +540,15 @@
             document.getElementById('guide-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.remove('hidden');
         }
+
+        // 监听窗口大小变化，重新渲染图表
+        window.addEventListener('resize', function() {
+            if (document.getElementById('radarChart')) {
+                const ratio = (totalB / (totalP || 1)).toFixed(2);
+                const finalRadar = radarData.map(v => v / questions.length);
+                renderChart(finalRadar);
+            }
+        });
     </script>
 </body>
 </html>
